@@ -1,0 +1,1197 @@
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    amber: {
+                        50: '#fffbeb',
+                        100: '#fef3c7',
+                        200: '#fde68a',
+                        500: '#f59e0b',
+                        600: '#d97706',
+                        700: '#b45309',
+                        800: '#92400e',
+                        900: '#78350f',
+                    },
+                    warm: {
+                        50: '#faf8f5',
+                        100: '#f4efe6',
+                        200: '#e6d8c3',
+                        800: '#3d2b1f',
+                        900: '#261a12',
+                        950: '#19110b'
+                    }
+                },
+                fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                    serif: ['Playfair Display', 'serif']
+                }
+            }
+        }
+    }
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,800;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+<style>
+    .map-container {
+        min-height: 400px;
+        z-index: 10;
+    }
+    .toast-slide {
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .leaflet-popup-content-wrapper {
+        background-color: #261a12;
+        color: #fef3c7;
+        border-radius: 0.75rem;
+        padding: 4px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    }
+    .leaflet-popup-tip {
+        background-color: #261a12;
+    }
+    .menu-tab-active {
+        background-color: #d97706;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+    }
+</style>
+
+<div class="bg-warm-50 text-warm-900 font-sans antialiased flex flex-col min-h-screen">
+
+    <header class="sticky top-0 z-50 bg-warm-900/95 backdrop-blur-md text-amber-50 shadow-md border-b border-amber-800/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                
+                <!-- Logo -->
+                <a href="#" class="flex items-center space-x-3 group">
+                    <div class="w-12 h-12 rounded-full bg-amber-600 text-amber-100 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
+                        <i class="fa-solid fa-wheat-awn text-2xl"></i>
+                    </div>
+                    <div>
+                        <span class="font-serif text-2xl font-bold tracking-tight text-amber-200 block leading-none">Mariell</span>
+                        <span class="text-xs tracking-widest text-amber-400 uppercase font-medium">Panadería & Pastelería</span>
+                    </div>
+                </a>
+
+                <!-- Desktop Navigation -->
+                <nav class="hidden md:flex items-center space-x-8 text-sm font-medium">
+                    <a href="#menu" class="hover:text-amber-400 transition-colors flex items-center gap-2 text-amber-300 font-semibold">
+                        <i class="fa-solid fa-utensils text-xs"></i> Menú
+                    </a>
+                    <a href="#visitanos" class="hover:text-amber-400 transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-store text-xs"></i> Visítanos
+                    </a>
+                    <a href="#ubicacion" class="hover:text-amber-400 transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-location-dot text-xs"></i> Ubicación
+                    </a>
+                    <a href="#horarios" class="hover:text-amber-400 transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-clock text-xs"></i> Horarios
+                    </a>
+                    <a href="#contacto" class="hover:text-amber-400 transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-envelope text-xs"></i> Contacto
+                    </a>
+                </nav>
+
+                <div class="hidden sm:flex items-center space-x-3">
+                    <a href="https://wa.me/573182158697?text=¡Hola%20Panadería%20Mariell!%20Quisiera%20hacer%20un%20pedido." 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2.5 rounded-full text-sm shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+                        <i class="fa-brands fa-whatsapp text-lg"></i>
+                        <span>Pedir por WhatsApp</span>
+                    </a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" type="button" class="md:hidden text-amber-200 hover:text-white p-2" aria-label="Abrir menú">
+                    <i class="fa-solid fa-bars text-2xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-warm-900 border-b border-amber-800/40 px-4 pt-2 pb-6 space-y-3">
+            <a href="#menu" class="block py-2 text-amber-300 font-bold border-b border-amber-800/20">Menú Digital</a>
+            <a href="#visitanos" class="block py-2 text-amber-100 hover:text-amber-400 font-medium border-b border-amber-800/20">Visítanos</a>
+            <a href="#ubicacion" class="block py-2 text-amber-100 hover:text-amber-400 font-medium border-b border-amber-800/20">Ubicación y Mapa</a>
+            <a href="#horarios" class="block py-2 text-amber-100 hover:text-amber-400 font-medium border-b border-amber-800/20">Horario de Atención</a>
+            <a href="#contacto" class="block py-2 text-amber-100 hover:text-amber-400 font-medium">Contacto y Pedidos</a>
+            <div class="pt-2">
+                <a href="https://wa.me/573182158697?text=¡Hola%20Panadería%20Mariell!%20Quisiera%20hacer%20un%20pedido." 
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="w-full inline-flex justify-center items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-3 rounded-xl text-sm shadow">
+                    <i class="fa-brands fa-whatsapp text-lg"></i>
+                    <span>Escribir por WhatsApp (318 215 8697)</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <section class="relative bg-warm-900 text-white overflow-hidden py-16 md:py-24">
+        <div class="absolute inset-0 z-0 opacity-25 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1600&q=80');"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-warm-900 via-warm-900/90 to-transparent z-0"></div>
+
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-2xl">
+                <div class="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 border border-amber-500/40 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">
+                    <i class="fa-solid fa-certificate"></i> Pan Recién Horneado & Desayunos
+                </div>
+                <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-extrabold text-amber-100 leading-tight mb-4">
+                    El aroma y sabor del pan artesanal en Bogotá
+                </h1>
+                <p class="text-lg text-amber-200/90 mb-8 leading-relaxed">
+                    Te esperamos en la <strong class="text-white font-semibold">Cra. 59 #130a-13, Ciudad Jardín Norte, Bogotá</strong>. Explora nuestro menú con desayunos completos, bebidas frías y calientes, y la mejor pastelería.
+                </p>
+
+                <div class="flex flex-wrap gap-4 items-center">
+                    <a href="#menu" class="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-warm-900 font-bold px-6 py-3.5 rounded-xl shadow-lg hover:shadow-amber-600/30 transition duration-300 transform hover:-translate-y-0.5">
+                        <i class="fa-solid fa-utensils"></i>
+                        <span>Ver Menú Completo</span>
+                    </a>
+                    <a href="https://wa.me/573182158697?text=¡Hola!%20Deseo%20hacer%20un%20pedido%20en%20Panadería%20Mariell" 
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3.5 rounded-xl shadow-lg hover:shadow-emerald-600/30 transition duration-300 transform hover:-translate-y-0.5">
+                        <i class="fa-brands fa-whatsapp text-xl"></i>
+                        <span>Pedir por WhatsApp (318 215 8697)</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="menu" class="py-16 md:py-24 bg-amber-50/50 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <span class="text-amber-700 font-bold uppercase tracking-widest text-xs block mb-2">Carta Digital</span>
+                <h2 class="font-serif text-3xl sm:text-4xl font-extrabold text-warm-900">
+                    Nuestro Menú
+                </h2>
+                <div class="w-16 h-1 bg-amber-500 mx-auto my-4 rounded-full"></div>
+                <p class="text-gray-600 text-base leading-relaxed">
+                    Combos de desayuno, bebidas preparadas al instante y repostería artesanal recién horneada.
+                </p>
+            </div>
+
+            <!-- Search and Takeout Notice Bar -->
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 bg-white p-4 rounded-2xl shadow-sm border border-warm-200">
+                <!-- Search Input -->
+                <div class="relative w-full md:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-gray-400 text-sm"></i>
+                    <input type="text" id="menu-search-input" onkeyup="filterMenuItems()" placeholder="Buscar producto o combo..." 
+                           class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none">
+                </div>
+
+                <!-- Takeout Notice -->
+                <div class="inline-flex items-center gap-2 bg-amber-100 text-amber-900 border border-amber-300 px-4 py-2 rounded-xl text-xs font-semibold">
+                    <i class="fa-solid fa-bag-shopping text-amber-700 text-sm"></i>
+                    <span>Desayunos para llevar: <strong>+$1.000</strong></span>
+                </div>
+            </div>
+
+            <!-- Category Filter Tabs -->
+            <div class="flex flex-wrap justify-center gap-2 sm:gap-3 mb-10" id="menu-tabs">
+                <button onclick="switchMenuCategory('all')" id="tab-all" class="menu-tab-btn menu-tab-active px-5 py-2.5 rounded-xl font-bold text-sm transition">
+                    <i class="fa-solid fa-border-all mr-1.5"></i> Todos
+                </button>
+                <button onclick="switchMenuCategory('combos')" id="tab-combos" class="menu-tab-btn bg-white hover:bg-amber-100 text-warm-900 border border-warm-200 px-5 py-2.5 rounded-xl font-semibold text-sm transition">
+                    <i class="fa-solid fa-mug-hot mr-1.5 text-amber-600"></i> Combos Desayuno
+                </button>
+                <button onclick="switchMenuCategory('platos')" id="tab-platos" class="menu-tab-btn bg-white hover:bg-amber-100 text-warm-900 border border-warm-200 px-5 py-2.5 rounded-xl font-semibold text-sm transition">
+                    <i class="fa-solid fa-egg mr-1.5 text-amber-600"></i> Platos Desayuno
+                </button>
+                <button onclick="switchMenuCategory('calientes')" id="tab-calientes" class="menu-tab-btn bg-white hover:bg-amber-100 text-warm-900 border border-warm-200 px-5 py-2.5 rounded-xl font-semibold text-sm transition">
+                    <i class="fa-solid fa-fire mr-1.5 text-amber-600"></i> Bebidas Calientes
+                </button>
+                <button onclick="switchMenuCategory('frias')" id="tab-frias" class="menu-tab-btn bg-white hover:bg-amber-100 text-warm-900 border border-warm-200 px-5 py-2.5 rounded-xl font-semibold text-sm transition">
+                    <i class="fa-solid fa-glass-water mr-1.5 text-amber-600"></i> Bebidas Frías
+                </button>
+                <button onclick="switchMenuCategory('pasteleria')" id="tab-pasteleria" class="menu-tab-btn bg-white hover:bg-amber-100 text-warm-900 border border-warm-200 px-5 py-2.5 rounded-xl font-semibold text-sm transition">
+                    <i class="fa-solid fa-cookie-bite mr-1.5 text-amber-600"></i> Pastelería & Salados
+                </button>
+            </div>
+
+            <!-- Menu Grid Container -->
+            <div id="menu-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- JS will dynamically populate products here -->
+            </div>
+
+            <div id="no-menu-results" class="hidden text-center py-12">
+                <i class="fa-solid fa-utensils text-4xl text-gray-300 mb-3"></i>
+                <p class="text-gray-500 font-medium">No se encontraron productos con esa búsqueda.</p>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="visitanos" class="py-16 md:py-24 bg-white relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="text-amber-600 font-bold uppercase tracking-widest text-xs block mb-2">Una Experiencia Para Tus Sentidos</span>
+                <h2 class="font-serif text-3xl sm:text-4xl font-extrabold text-warm-900">
+                    Visítanos en Panadería Mariell
+                </h2>
+                <div class="w-16 h-1 bg-amber-500 mx-auto my-4 rounded-full"></div>
+                <p class="text-gray-600 text-lg leading-relaxed">
+                    Hemos creado un rincón acogedor en el norte de Bogotá para consentir tu paladar con recetas artesanales horneadas día a día con dedicación y amor.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                <!-- Card 1 -->
+                <div class="bg-warm-50 rounded-2xl overflow-hidden shadow-md border border-warm-200/60 group hover:shadow-xl transition-all duration-300 flex flex-col">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=800&q=80" 
+                             alt="Pan fresco recién horneado" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                             onerror="this.src='https://placehold.co/800x600/d97706/ffffff?text=Pan+Artesanal'">
+                        <div class="absolute top-4 right-4 bg-warm-900/80 backdrop-blur-sm text-amber-300 text-xs font-semibold px-3 py-1.5 rounded-full">
+                            <i class="fa-solid fa-fire-flame-curved text-amber-500 mr-1"></i> Recién Horneado
+                        </div>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <h3 class="font-serif text-xl font-bold text-warm-900 mb-2">Amasijos & Pan Tradicional</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed mb-4 flex-1">
+                            Mollares, pandebonos crujientes, almojábanas calientes y pan de queso elaborados con ingredientes seleccionados.
+                        </p>
+                        <span class="text-amber-700 text-xs font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-clock"></i> Tandas a las 7:00 AM, 12:00 PM y 4:30 PM
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bg-warm-50 rounded-2xl overflow-hidden shadow-md border border-warm-200/60 group hover:shadow-xl transition-all duration-300 flex flex-col">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80" 
+                             alt="Café y repostería en Panadería Mariell" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                             onerror="this.src='https://placehold.co/800x600/b45309/ffffff?text=Cafe+Especial'">
+                        <div class="absolute top-4 right-4 bg-warm-900/80 backdrop-blur-sm text-amber-300 text-xs font-semibold px-3 py-1.5 rounded-full">
+                            <i class="fa-solid fa-mug-hot text-amber-400 mr-1"></i> Café de Origen
+                        </div>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <h3 class="font-serif text-xl font-bold text-warm-900 mb-2">Café & Onces Santafereñas</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed mb-4 flex-1">
+                            Acompaña tu tarde con chocolate con queso, tinto de café colombiano de origen y la mejor compañía.
+                        </p>
+                        <span class="text-amber-700 text-xs font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-heart"></i> Ambiente cálido y familiar
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="bg-warm-50 rounded-2xl overflow-hidden shadow-md border border-warm-200/60 group hover:shadow-xl transition-all duration-300 flex flex-col">
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=800&q=80" 
+                             alt="Pastelería y tortas artesanales" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                             onerror="this.src='https://placehold.co/800x600/78350f/ffffff?text=Reposteria'">
+                        <div class="absolute top-4 right-4 bg-warm-900/80 backdrop-blur-sm text-amber-300 text-xs font-semibold px-3 py-1.5 rounded-full">
+                            <i class="fa-solid fa-cake-candles text-amber-400 mr-1"></i> Repostería
+                        </div>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <h3 class="font-serif text-xl font-bold text-warm-900 mb-2">Tortas & Postres Especiales</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed mb-4 flex-1">
+                            Pedidos para celebraciones, ponqués artesanales y postres del día para compartir en tus momentos especiales.
+                        </p>
+                        <span class="text-amber-700 text-xs font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-gift"></i> Pedidos por encargo
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invitation Banner inside Visítanos -->
+            <div class="bg-gradient-to-r from-amber-700 via-amber-800 to-warm-900 rounded-3xl p-8 md:p-12 text-white shadow-2xl relative overflow-hidden">
+                <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+                    <div class="space-y-3 text-center lg:text-left">
+                        <span class="text-amber-300 font-semibold text-xs uppercase tracking-widest bg-amber-900/50 px-3 py-1 rounded-full border border-amber-600/40">
+                            ¿Planeas una visita?
+                        </span>
+                        <h3 class="font-serif text-2xl sm:text-3xl font-bold text-amber-100">
+                            Te recibimos con los brazos abiertos y el horno encendido
+                        </h3>
+                        <p class="text-amber-200/90 text-sm sm:text-base max-w-xl">
+                            Ubicados en la <strong class="text-white">Cra. 59 #130a-13, Ciudad Jardín Norte</strong>. Consulta nuestra dirección o solicita tu pedido a domicilio.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                        <button onclick="scrollToSection('ubicacion')" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-warm-900 font-bold px-6 py-3.5 rounded-xl transition duration-300 text-center shadow-lg">
+                            <i class="fa-solid fa-compass mr-2"></i> Ver cómo llegar
+                        </button>
+                        <a href="https://wa.me/573182158697?text=¡Hola!%20Quisiera%20saber%20si%20tienen%20mesa%20disponible%20o%20hacer%20un%20pedido." 
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3.5 rounded-xl transition duration-300 text-center shadow-lg flex items-center justify-center gap-2">
+                            <i class="fa-brands fa-whatsapp text-lg"></i>
+                            <span>Consultar por WhatsApp</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="ubicacion" class="py-16 md:py-24 bg-warm-100 border-t border-warm-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <span class="text-amber-700 font-bold uppercase tracking-widest text-xs block mb-2">Dirección Exacta</span>
+                <h2 class="font-serif text-3xl sm:text-4xl font-extrabold text-warm-900">
+                    Nuestra Ubicación
+                </h2>
+                <p class="text-gray-600 mt-2 text-base">
+                    Encuéntranos en Ciudad Jardín Norte, Bogotá. ¡Te estamos esperando!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                
+                <div class="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-warm-200 flex flex-col justify-between space-y-6">
+                    
+                    <div>
+                        <div class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-800 bg-amber-100 px-3 py-1 rounded-full mb-6">
+                            <i class="fa-solid fa-store"></i> Sede Principal
+                        </div>
+
+                        <div class="bg-warm-50 border-2 border-dashed border-amber-300 p-5 rounded-2xl mb-6 relative group">
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Dirección de la Panadería</p>
+                            <h3 id="address-text" class="font-serif text-2xl font-bold text-warm-900 tracking-tight">
+                                Cra. 59 #130a-13
+                            </h3>
+                            <p class="text-sm text-gray-600 font-medium">Ciudad Jardín Norte, Bogotá, Colombia</p>
+
+                            <button onclick="copyAddress()" 
+                                    class="mt-4 w-full bg-amber-100 hover:bg-amber-200 text-amber-900 font-semibold py-2 px-4 rounded-xl text-sm transition-all duration-200 flex items-center justify-center gap-2">
+                                <i class="fa-regular fa-copy text-amber-700"></i>
+                                <span id="copy-btn-text">Copiar Dirección</span>
+                            </button>
+                        </div>
+
+                        <div class="space-y-4 text-sm">
+                            <div class="flex items-start gap-3">
+                                <div class="w-9 h-9 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-map-pin"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-warm-900">Sector / Referencia</p>
+                                    <p class="text-gray-600">Ciudad Jardín Norte - Suba / Las Villas, Bogotá.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <div class="w-9 h-9 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-bus"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-warm-900">Transporte y Acceso</p>
+                                    <p class="text-gray-600">Acceso por Cra. 59 y Cl. 130a / Av. Calle 134. Rutas SITP cercanas.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <div class="w-9 h-9 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-square-parking"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-warm-900">Estacionamiento</p>
+                                    <p class="text-gray-600">Zona con facilidades de parqueo rápido.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-gray-100 space-y-3">
+                        <a href="https://www.google.com/maps/dir/?api=1&destination=Cra.+59+%23130a-13,+Ciudad+Jardin+Norte,+Bogot%C3%A1" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-md transition duration-300 flex items-center justify-center gap-3 text-base">
+                            <i class="fa-solid fa-diamond-turn-right text-lg"></i>
+                            <span>Cómo llegar (Google Maps)</span>
+                        </a>
+
+                        <a href="https://maps.apple.com/?daddr=Cra.+59+%23130a-13,+Ciudad+Jardín+Norte,+Bogotá" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           class="w-full bg-warm-800 hover:bg-warm-900 text-amber-100 font-semibold py-3 px-6 rounded-xl transition duration-300 flex items-center justify-center gap-3 text-sm">
+                            <i class="fa-brands fa-apple text-lg"></i>
+                            <span>Abrir en Apple Maps</span>
+                        </a>
+                    </div>
+
+                </div>
+
+                <div class="lg:col-span-7 bg-white rounded-3xl overflow-hidden shadow-xl border border-warm-200 flex flex-col relative min-h-[420px]">
+                    <div class="bg-warm-900 text-amber-100 p-4 flex flex-wrap items-center justify-between gap-2 z-20">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-earth-americas text-amber-400"></i>
+                            <span class="text-sm font-semibold">Mapa Interactivo - Panadería Mariell</span>
+                        </div>
+                        <button onclick="recenterMap()" class="bg-warm-800 hover:bg-amber-600 text-white text-xs px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                            <i class="fa-solid fa-crosshairs"></i> Centrar
+                        </button>
+                    </div>
+
+                    <div id="map" class="w-full flex-1 min-h-[380px] bg-warm-200 z-10"></div>
+
+                    <div class="bg-white/95 backdrop-blur-md p-3 border-t border-gray-200 text-xs flex flex-wrap justify-between items-center text-gray-600 z-20">
+                        <span><i class="fa-solid fa-location-pin text-amber-600 mr-1"></i> Cra. 59 #130a-13, Ciudad Jardín Norte, Bogotá</span>
+                        <span class="font-semibold text-amber-800">Ubicación verificada</span>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <section id="horarios" class="py-16 md:py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-warm-50 rounded-3xl p-6 sm:p-10 shadow-xl border border-warm-200 relative">
+                    
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-6 border-b border-warm-200">
+                        <div>
+                            <span class="text-amber-700 font-bold uppercase tracking-widest text-xs block mb-1">Disponibilidad</span>
+                            <h2 class="font-serif text-3xl font-bold text-warm-900">Horario de Atención</h2>
+                            <p class="text-gray-600 text-sm mt-1">Horarios siempre actualizados para atenderte de la mejor manera.</p>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div id="status-badge" class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold shadow-sm">
+                                <span class="w-2.5 h-2.5 rounded-full animate-ping"></span>
+                                <span id="status-badge-text">Verificando...</span>
+                            </div>
+
+                            <button id="admin-toggle-btn" 
+                                    onclick="toggleAdminMode()" 
+                                    class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                                <span id="admin-toggle-text">Modo Propietario (Editar)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="admin-notice" class="hidden mb-6 bg-amber-500/10 border-2 border-amber-500/40 p-4 rounded-2xl text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-circle-info text-amber-600 text-base"></i>
+                            <span><strong>Modo Edición Activado:</strong> Modifique los campos y presione "Guardar Cambios".</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="saveSchedule()" class="bg-amber-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-amber-700 transition">
+                                Guardar
+                            </button>
+                            <button onclick="resetSchedule()" class="bg-gray-200 text-gray-800 font-medium px-3 py-1.5 rounded-lg text-xs hover:bg-gray-300 transition">
+                                Restablecer
+                            </button>
+                        </div>
+                    </div>
+
+                    <form id="schedule-form" onsubmit="event.preventDefault(); saveSchedule();">
+                        <div class="space-y-3" id="schedule-container">
+                            <!-- JS will inject schedule rows here -->
+                        </div>
+
+                        <div id="admin-actions-bar" class="hidden mt-6 pt-4 border-t border-warm-200 flex flex-wrap justify-end gap-3">
+                            <button type="button" onclick="resetSchedule()" class="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 text-sm font-semibold hover:bg-gray-100 transition">
+                                Restablecer por Defecto
+                            </button>
+                            <button type="submit" class="px-6 py-2.5 rounded-xl bg-amber-600 text-white text-sm font-bold shadow-md hover:bg-amber-700 transition flex items-center gap-2">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                <span>Guardar Cambios</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="mt-8 bg-amber-100/70 border border-amber-300 rounded-2xl p-4 flex items-center justify-between flex-wrap gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-amber-600 text-white flex items-center justify-center shrink-0 shadow">
+                                <i class="fa-solid fa-bread-slice"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-warm-900 text-sm">Horas de Pan Caliente Especial</h4>
+                                <p class="text-xs text-warm-800">Pan de bono, pandeyuca y pan de queso salen calientes a las <strong>7:00 AM</strong> y <strong>4:30 PM</strong>.</p>
+                            </div>
+                        </div>
+                        <a href="https://wa.me/573182158697?text=¡Hola!%20Quisiera%20encargar%20pan%20caliente." 
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="text-xs font-bold text-amber-800 hover:text-amber-900 underline flex items-center gap-1">
+                            Reservar por WhatsApp <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="contacto" class="py-16 md:py-24 bg-warm-900 text-amber-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+                
+                <div class="lg:col-span-5 space-y-8">
+                    <div>
+                        <span class="text-amber-400 font-bold uppercase tracking-widest text-xs block mb-2">Atención Directa</span>
+                        <h2 class="font-serif text-3xl sm:text-4xl font-extrabold text-amber-100">
+                            Contacto & Pedidos
+                        </h2>
+                        <p class="text-amber-200/80 mt-3 text-sm leading-relaxed">
+                            Ponte en contacto con Panadería Mariell para pedidos especiales, cotizaciones o envíos a domicilio.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="bg-warm-800/80 border border-amber-800/50 p-4 rounded-2xl flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-amber-600/30 text-amber-300 border border-amber-500/30 flex items-center justify-center shrink-0 text-xl">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-amber-300/80 uppercase font-bold">Dirección</p>
+                                <p class="font-bold text-white text-base">Cra. 59 #130a-13</p>
+                                <p class="text-xs text-amber-200/70">Ciudad Jardín Norte, Bogotá, Colombia</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-warm-800/80 border border-amber-800/50 p-4 rounded-2xl flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 flex items-center justify-center shrink-0 text-xl">
+                                <i class="fa-brands fa-whatsapp"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-xs text-emerald-300 uppercase font-bold">Línea WhatsApp Pedidos</p>
+                                <p class="font-bold text-white text-base">+57 318 215 8697</p>
+                                <p class="text-xs text-emerald-200/70">Atención instantánea en horario comercial</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-warm-800/80 border border-amber-800/50 p-4 rounded-2xl flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-amber-600/30 text-amber-300 border border-amber-500/30 flex items-center justify-center shrink-0 text-xl">
+                                <i class="fa-solid fa-phone"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-amber-300/80 uppercase font-bold">Atención Telefónica</p>
+                                <p class="font-bold text-white text-base">318 215 8697</p>
+                                <p class="text-xs text-amber-200/70">Panadería y Repostería Mariell</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-emerald-950/60 border border-emerald-600/40 p-6 rounded-3xl space-y-4">
+                        <div class="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                            <i class="fa-brands fa-whatsapp text-xl"></i>
+                            <span>Generador de Mensaje de WhatsApp</span>
+                        </div>
+                        <p class="text-xs text-emerald-100/80">Selecciona el motivo de tu consulta:</p>
+
+                        <div class="space-y-2">
+                            <button onclick="setWhatsAppPreset('¡Hola Panadería Mariell! Quisiera conocer la disponibilidad del menú de hoy.')"
+                                    class="w-full text-left bg-emerald-900/50 hover:bg-emerald-800/80 border border-emerald-700/50 p-2.5 rounded-xl text-xs text-emerald-100 transition flex items-center justify-between">
+                                <span>🍞 Consultar menú y pan recién horneado</span>
+                                <i class="fa-solid fa-chevron-right text-xs text-emerald-400"></i>
+                            </button>
+
+                            <button onclick="setWhatsAppPreset('¡Hola! Deseo cotizar una torta o ponqué especial para un evento.')"
+                                    class="w-full text-left bg-emerald-900/50 hover:bg-emerald-800/80 border border-emerald-700/50 p-2.5 rounded-xl text-xs text-emerald-100 transition flex items-center justify-between">
+                                <span>🎂 Cotización de tortas / pastelería</span>
+                                <i class="fa-solid fa-chevron-right text-xs text-emerald-400"></i>
+                            </button>
+
+                            <button onclick="setWhatsAppPreset('¡Hola! Quisiera hacer un pedido de desayunos a domicilio.')"
+                                    class="w-full text-left bg-emerald-900/50 hover:bg-emerald-800/80 border border-emerald-700/50 p-2.5 rounded-xl text-xs text-emerald-100 transition flex items-center justify-between">
+                                <span>🍳 Pedido de Desayuno a Domicilio</span>
+                                <i class="fa-solid fa-chevron-right text-xs text-emerald-400"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="lg:col-span-7 bg-white text-warm-900 p-8 sm:p-10 rounded-3xl shadow-2xl border border-warm-200">
+                    <h3 class="font-serif text-2xl font-bold mb-2 text-warm-900">Envíanos un Mensaje</h3>
+                    <p class="text-gray-600 text-sm mb-6">Completa el siguiente formulario y responderemos a la brevedad.</p>
+
+                    <form id="contact-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Nombre Completo *</label>
+                                <input type="text" name="name" required placeholder="Tu nombre" 
+                                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Teléfono / WhatsApp *</label>
+                                <input type="tel" name="phone" required placeholder="Ej: 318 215 8697" 
+                                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm outline-none transition">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Correo Electrónico</label>
+                            <input type="email" name="email" placeholder="ejemplo@correo.com" 
+                                   class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm outline-none transition">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Asunto</label>
+                            <select name="subject" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm outline-none transition">
+                                <option value="pedido">Pedido de Desayuno / Domicilio</option>
+                                <option value="cotizacion">Cotización para eventos</option>
+                                <option value="horarios">Consulta sobre horarios / productos</option>
+                                <option value="otro">Otro comentario</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Mensaje o Detalle del Pedido *</label>
+                            <textarea name="message" rows="4" required placeholder="Escribe aquí los productos o la consulta..." 
+                                      class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm outline-none transition"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition duration-300 flex items-center justify-center gap-2 text-base">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Enviar Mensaje</span>
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <footer class="bg-warm-950 text-amber-200/70 border-t border-amber-900/40 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+                
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-amber-600 text-white flex items-center justify-center">
+                        <i class="fa-solid fa-wheat-awn text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="font-serif text-xl font-bold text-amber-100 block leading-none">Panadería Mariell</span>
+                        <span class="text-xs text-amber-400">Tradición y Sabor Artesanal</span>
+                    </div>
+                </div>
+
+                <div class="text-xs space-y-1">
+                    <p><i class="fa-solid fa-location-dot text-amber-500 mr-1"></i> Cra. 59 #130a-13, Ciudad Jardín Norte, Bogotá, Colombia</p>
+                    <p><i class="fa-brands fa-whatsapp text-emerald-500 mr-1"></i> Contacto: +57 318 215 8697</p>
+                </div>
+
+                <div class="text-xs text-amber-400/60">
+                    &copy; <span id="year-span"></span> Panadería Mariell. Todos los derechos reservados.
+                </div>
+
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 pointer-events-none toast-slide transition-all duration-300">
+        <div id="toast-content" class="bg-warm-900 text-white border border-amber-500/40 px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 text-sm">
+            <i id="toast-icon" class="fa-solid fa-circle-check text-amber-400 text-lg"></i>
+            <span id="toast-msg" class="font-medium">Notificación</span>
+        </div>
+    </div>
+
+</div>
+
+<!-- Leaflet JavaScript Library -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<script>
+    const BAKERY_LOCATION = {
+        lat: 4.7170,
+        lng: -74.0628,
+        address: "Cra. 59 #130a-13, Ciudad Jardín Norte, Bogotá",
+        title: "Panadería Mariell"
+    };
+
+    const DEFAULT_SCHEDULE = [
+        { day: "Lunes", key: "mon", open: "06:00", close: "22:00", active: true },
+        { day: "Martes", key: "tue", open: "06:00", close: "22:00", active: true },
+        { day: "Miércoles", key: "wed", open: "06:00", close: "22:00", active: true },
+        { day: "Jueves", key: "thu", open: "06:00", close: "22:00", active: true },
+        { day: "Viernes", key: "fri", open: "06:00", close: "22:00", active: true },
+        { day: "Sábado", key: "sat", open: "06:00", close: "22:00", active: true },
+        { day: "Domingo y Festivos", key: "sun", open: "06:00", close: "22:00", active: true }
+    ];
+
+    // Digital Menu Data from standard price list images
+    const MENU_ITEMS = [
+        // COMBOS DESAYUNO
+        { category: 'combos', title: 'Combo 1', price: 17500, desc: 'Caldo de costilla, huevos al gusto, bebida caliente y pan', badge: 'Popular', icon: 'fa-mug-hot' },
+        { category: 'combos', title: 'Combo 2', price: 12500, desc: 'Caldo de costilla, bebida caliente y pan', icon: 'fa-bowl-food' },
+        { category: 'combos', title: 'Combo 3', price: 10000, desc: 'Chocolate o aguapanela, queso y almojábana', icon: 'fa-cheese' },
+        { category: 'combos', title: 'Combo 4', price: 14000, desc: 'Tamal, chocolate o café y pan', icon: 'fa-box-archive' },
+        { category: 'combos', title: 'Combo 5', price: 11500, desc: 'Huevos rancheros, bebida caliente y pan', badge: 'Oferta $10.000', icon: 'fa-egg' },
+        { category: 'combos', title: 'Combo 6', price: 12000, desc: 'Huevos con arroz, bebida caliente y pan', icon: 'fa-bowl-rice' },
+        { category: 'combos', title: 'Combo 7', price: 15500, desc: 'Moñona, gaseosa 250ml y pan', icon: 'fa-utensils' },
+
+        // PLATOS DESAYUNO
+        { category: 'platos', title: 'Huevos con Arroz al Gusto', price: 9000, desc: 'Porción generosa servida al gusto', icon: 'fa-bowl-rice' },
+        { category: 'platos', title: 'Huevos Rancheros', price: 7000, desc: 'Con guiso criollo tradicional', icon: 'fa-pepper-hot' },
+        { category: 'platos', title: 'Huevos al Gusto', price: 5500, desc: 'Fritos, pericos o revueltos', icon: 'fa-egg' },
+        { category: 'platos', title: 'Tamal Especial', price: 7000, desc: 'Tamal rico en sabor y con presa tradicional', icon: 'fa-scroll' },
+        { category: 'platos', title: 'Caldo de Costilla', price: 8500, desc: 'Sustancioso con papa y cilantro fresco', icon: 'fa-bowl-food' },
+        { category: 'platos', title: 'Changua', price: 8500, desc: 'Changua tradicional con huevo y cilantro', icon: 'fa-mug-saucer' },
+        { category: 'platos', title: 'Changua Especial', price: 10000, desc: 'Con almojábana y doble queso', icon: 'fa-star' },
+        { category: 'platos', title: 'Arepa de Peto', price: 3500, desc: 'Arepa de maíz calientita', icon: 'fa-circle' },
+        { category: 'platos', title: 'Porción de Queso', price: 4000, desc: 'Queso fresco de acompañamiento', icon: 'fa-cheese' },
+        { category: 'platos', title: 'Calentado', price: 13000, desc: 'Frijoles, lentejas o pasta con arroz y acompañante', icon: 'fa-fire' },
+        { category: 'platos', title: 'Moñona', price: 15500, desc: 'Combinación tradicional completa de la casa', badge: 'Recomendado', icon: 'fa-crown' },
+
+        // BEBIDAS CALIENTES
+        { category: 'calientes', title: 'Tinto', price: 2200, desc: 'Café colombiano recién colado', icon: 'fa-mug-hot' },
+        { category: 'calientes', title: 'Perico', price: 2800, desc: 'Café tinto con cortado de leche', icon: 'fa-coffee' },
+        { category: 'calientes', title: 'Café en Leche', price: 4000, desc: 'Cremoso y caliente', icon: 'fa-mug-saucer' },
+        { category: 'calientes', title: 'Chocolate', price: 4500, desc: 'Chocolate caliente tradicional', icon: 'fa-whiskey-glass' },
+        { category: 'calientes', title: 'Té', price: 4000, desc: 'Sabor a elección', icon: 'fa-leaf' },
+        { category: 'calientes', title: 'Capuchino', price: 6500, desc: 'Con espuma de leche y canela', icon: 'fa-mug-hot' },
+        { category: 'calientes', title: 'Capuchino con Licor', price: 9500, desc: 'Toque especial de la casa', icon: 'fa-wine-glass' },
+        { category: 'calientes', title: 'Mocachino', price: 6500, desc: 'Café espresso, leche y chocolate', icon: 'fa-mug-hot' },
+        { category: 'calientes', title: 'Milo Caliente', price: 6500, desc: 'Preparado al instante', icon: 'fa-mug-saucer' },
+        { category: 'calientes', title: 'Aromática Sencilla', price: 2500, desc: 'Infusión de yerbas naturales', icon: 'fa-spa' },
+        { category: 'calientes', title: 'Aromática de Frutas', price: 4000, desc: 'Con picado de frutas frescas', icon: 'fa-apple-whole' },
+
+        // BEBIDAS FRÍAS
+        { category: 'frias', title: 'Jugos Naturales en Agua', price: 6000, desc: 'Fruta 100% natural', icon: 'fa-glass-water' },
+        { category: 'frias', title: 'Jugos Naturales en Leche', price: 7000, desc: 'Cremosos y refrescantes', icon: 'fa-blender' },
+        { category: 'frias', title: 'Jugo de Naranja', price: 5500, desc: 'Exprimido al instante', icon: 'fa-lemon' },
+        { category: 'frias', title: 'Milo Frío', price: 6600, desc: 'Servido helado', icon: 'fa-snowflake' },
+        { category: 'frias', title: 'Masato en Botella', price: 4000, desc: 'Receta casera de arroz fermentado', badge: 'Casero', icon: 'fa-bottle-water' },
+        { category: 'frias', title: 'Kumis Casero', price: 3800, desc: 'Delicioso y natural', icon: 'fa-whiskey-glass' },
+        { category: 'frias', title: 'Gaseosa 350 ML', price: 3200, desc: 'Variedad de sabores', icon: 'fa-bottle-droplet' },
+
+        // PASTELERÍA & REPOSTERÍA
+        { category: 'pasteleria', title: 'Mantecada (porción)', price: 3000, desc: 'Porción suave y de maíz', icon: 'fa-cake-candles' },
+        { category: 'pasteleria', title: 'Torta (porción)', price: 6000, desc: 'Sabor del día fresco', icon: 'fa-cake-candles' },
+        { category: 'pasteleria', title: 'Croissant de Chocolate', price: 4500, desc: 'Hojaldre crujiente con centro cremoso', badge: 'Delicia', icon: 'fa-bread-slice' },
+        { category: 'pasteleria', title: 'Croissant Sencillo', price: 3800, desc: 'Hojaldre suave con mantequilla', icon: 'fa-bread-slice' },
+        { category: 'pasteleria', title: 'Donas', price: 4000, desc: 'Glaseadas o chocodonas', icon: 'fa-circle-notch' },
+        { category: 'pasteleria', title: 'Mariposas', price: 4000, desc: 'Hojaldre dulce tradicional', icon: 'fa-cookie' },
+        { category: 'pasteleria', title: 'Milhoja', price: 4500, desc: 'Capas crocantes con arequipe', icon: 'fa-layer-group' },
+        { category: 'pasteleria', title: 'Brownie', price: 4500, desc: 'Chocolate denso con nuez', icon: 'fa-square' },
+        { category: 'pasteleria', title: 'Pastel de Pollo', price: 4500, desc: 'Relleno jugoso recién horneado', icon: 'fa-drumstick-bite' },
+        { category: 'pasteleria', title: 'Pastel de Carne', price: 4500, desc: 'Relleno de carne sazonada', icon: 'fa-pie' },
+        { category: 'pasteleria', title: 'Galletas', price: 2500, desc: 'Empaque de galletas artesanales', icon: 'fa-cookie-bite' }
+    ];
+
+    let currentCategory = 'all';
+    let scheduleData = [];
+    let isAdminMode = false;
+    let mapInstance = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('year-span').textContent = new Date().getFullYear();
+        setupMobileMenu();
+        renderMenuGrid();
+        loadScheduleData();
+        renderSchedule();
+        updateOpenStatus();
+        initLeafletMap();
+    });
+
+    function setupMobileMenu() {
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+        if (btn && menu) {
+            btn.addEventListener('click', () => {
+                menu.classList.toggle('hidden');
+            });
+        }
+    }
+
+    function scrollToSection(id) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    function formatCurrency(val) {
+        return '$' + val.toLocaleString('es-CO');
+    }
+
+    function renderMenuGrid() {
+        const grid = document.getElementById('menu-grid');
+        const searchVal = (document.getElementById('menu-search-input')?.value || '').toLowerCase();
+        const noResults = document.getElementById('no-menu-results');
+
+        if (!grid) return;
+
+        const filtered = MENU_ITEMS.filter(item => {
+            const matchesCat = currentCategory === 'all' || item.category === currentCategory;
+            const matchesSearch = item.title.toLowerCase().includes(searchVal) || item.desc.toLowerCase().includes(searchVal);
+            return matchesCat && matchesSearch;
+        });
+
+        if (filtered.length === 0) {
+            grid.innerHTML = '';
+            if (noResults) noResults.classList.remove('hidden');
+            return;
+        }
+
+        if (noResults) noResults.classList.add('hidden');
+
+        grid.innerHTML = filtered.map(item => `
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-warm-200 hover:shadow-md hover:border-amber-400 transition-all duration-300 flex flex-col justify-between group">
+                <div>
+                    <div class="flex items-start justify-between gap-2 mb-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                                <i class="fa-solid ${item.icon || 'fa-utensils'} text-sm"></i>
+                            </div>
+                            <h3 class="font-serif font-bold text-warm-900 text-base group-hover:text-amber-700 transition">${item.title}</h3>
+                        </div>
+                        <span class="font-bold text-amber-800 text-base bg-amber-50 border border-amber-200/60 px-2.5 py-1 rounded-xl whitespace-nowrap">
+                            ${formatCurrency(item.price)}
+                        </span>
+                    </div>
+
+                    ${item.badge ? `
+                        <div class="inline-block bg-amber-500/15 text-amber-800 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md mb-2">
+                            ${item.badge}
+                        </div>
+                    ` : ''}
+
+                    <p class="text-xs text-gray-600 leading-relaxed mb-4">${item.desc}</p>
+                </div>
+
+                <div class="pt-3 border-t border-gray-100 flex items-center justify-between">
+                    <span class="text-[11px] text-gray-400 font-medium capitalize">${getCategoryLabel(item.category)}</span>
+                    <button onclick="orderSingleItem('${item.title}', ${item.price})" 
+                            class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-1.5 rounded-lg text-xs shadow transition flex items-center gap-1.5">
+                        <i class="fa-brands fa-whatsapp"></i>
+                        <span>Pedir</span>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function getCategoryLabel(cat) {
+        switch(cat) {
+            case 'combos': return 'Combo Desayuno';
+            case 'platos': return 'Plato Desayuno';
+            case 'calientes': return 'Bebida Caliente';
+            case 'frias': return 'Bebida Fría';
+            case 'pasteleria': return 'Pastelería / Salado';
+            default: return 'Mariell';
+        }
+    }
+
+    function switchMenuCategory(cat) {
+        currentCategory = cat;
+        document.querySelectorAll('.menu-tab-btn').forEach(btn => {
+            btn.classList.remove('menu-tab-active', 'bg-white');
+            btn.classList.add('bg-white');
+        });
+
+        const activeBtn = document.getElementById(`tab-${cat}`);
+        if (activeBtn) {
+            activeBtn.classList.add('menu-tab-active');
+            activeBtn.classList.remove('bg-white');
+        }
+
+        renderMenuGrid();
+    }
+
+    function filterMenuItems() {
+        renderMenuGrid();
+    }
+
+    function orderSingleItem(title, price) {
+        const text = `¡Hola Panadería Mariell! Quisiera pedir: ${title} (${formatCurrency(price)})`;
+        setWhatsAppPreset(text);
+    }
+
+    function initLeafletMap() {
+        try {
+            mapInstance = L.map('map', {
+                center: [BAKERY_LOCATION.lat, BAKERY_LOCATION.lng],
+                zoom: 16,
+                scrollWheelZoom: false
+            });
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(mapInstance);
+
+            const bakeryIcon = L.divIcon({
+                className: 'custom-leaflet-marker',
+                html: `
+                    <div class="relative flex items-center justify-center">
+                        <div class="w-10 h-10 bg-amber-600 text-white rounded-full flex items-center justify-center border-2 border-white shadow-2xl animate-bounce">
+                            <i class="fa-solid fa-wheat-awn text-lg"></i>
+                        </div>
+                        <div class="absolute -bottom-1 w-3 h-3 bg-amber-600 rotate-45"></div>
+                    </div>
+                `,
+                iconSize: [40, 40],
+                iconAnchor: [20, 40],
+                popupAnchor: [0, -40]
+            });
+
+            const marker = L.marker([BAKERY_LOCATION.lat, BAKERY_LOCATION.lng], { icon: bakeryIcon }).addTo(mapInstance);
+
+            const popupContent = `
+                <div class="text-center p-2 font-sans">
+                    <p class="font-serif font-bold text-amber-300 text-base mb-1">🥖 Panadería Mariell</p>
+                    <p class="text-xs text-amber-100 mb-2">Cra. 59 #130a-13, Ciudad Jardín Norte</p>
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=Cra.+59+%23130a-13,+Ciudad+Jardin+Norte,+Bogot%C3%A1" 
+                       target="_blank" 
+                       class="inline-block bg-amber-500 hover:bg-amber-400 text-warm-900 font-bold px-3 py-1 rounded text-xs transition">
+                        <i class="fa-solid fa-diamond-turn-right mr-1"></i> Cómo llegar
+                    </a>
+                </div>
+            `;
+
+            marker.bindPopup(popupContent).openPopup();
+
+        } catch (err) {
+            console.error("Map initialization error:", err);
+        }
+    }
+
+    function recenterMap() {
+        if (mapInstance) {
+            mapInstance.setView([BAKERY_LOCATION.lat, BAKERY_LOCATION.lng], 16, { animate: true });
+            showToast("Mapa centrado en Panadería Mariell", "fa-crosshairs");
+        }
+    }
+
+    function loadScheduleData() {
+        const saved = localStorage.getItem('mariell_bakery_schedule');
+        if (saved) {
+            try {
+                scheduleData = JSON.parse(saved);
+            } catch (e) {
+                scheduleData = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+            }
+        } else {
+            scheduleData = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+        }
+    }
+
+    function toggleAdminMode() {
+        isAdminMode = !isAdminMode;
+        const btnText = document.getElementById('admin-toggle-text');
+        const notice = document.getElementById('admin-notice');
+        const actions = document.getElementById('admin-actions-bar');
+
+        if (isAdminMode) {
+            btnText.textContent = "Finalizar Edición";
+            notice.classList.remove('hidden');
+            actions.classList.remove('hidden');
+            showToast("Modo edición activado. Puedes editar los horarios.", "fa-pen-to-square");
+        } else {
+            btnText.textContent = "Modo Propietario (Editar)";
+            notice.classList.add('hidden');
+            actions.classList.add('hidden');
+        }
+        renderSchedule();
+    }
+
+    function renderSchedule() {
+        const container = document.getElementById('schedule-container');
+        if (!container) return;
+
+        container.innerHTML = scheduleData.map((item, index) => {
+            if (isAdminMode) {
+                return `
+                    <div class="bg-white p-3 sm:p-4 rounded-xl border border-amber-300 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="font-bold text-warm-900 text-sm sm:w-1/3 flex items-center gap-2">
+                            <i class="fa-regular fa-calendar-days text-amber-600"></i>
+                            <span>${item.day}</span>
+                        </div>
+                        <div class="flex items-center gap-2 flex-1 justify-end">
+                            <input type="time" 
+                                   value="${item.open}" 
+                                   onchange="updateScheduleItem(${index}, 'open', this.value)"
+                                   class="bg-warm-50 border border-gray-300 rounded-lg px-2 py-1 text-sm font-semibold text-warm-900 focus:ring-2 focus:ring-amber-500">
+                            <span class="text-xs text-gray-500 font-bold">a</span>
+                            <input type="time" 
+                                   value="${item.close}" 
+                                   onchange="updateScheduleItem(${index}, 'close', this.value)"
+                                   class="bg-warm-50 border border-gray-300 rounded-lg px-2 py-1 text-sm font-semibold text-warm-900 focus:ring-2 focus:ring-amber-500">
+                            <label class="inline-flex items-center ml-2 cursor-pointer">
+                                <input type="checkbox" ${item.active ? 'checked' : ''} 
+                                       onchange="updateScheduleItem(${index}, 'active', this.checked)"
+                                       class="sr-only peer">
+                                <div class="w-8 h-4 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-amber-600 relative"></div>
+                            </label>
+                        </div>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-warm-200/80 shadow-sm flex items-center justify-between hover:border-amber-300 transition">
+                        <span class="font-medium text-warm-900 text-sm sm:text-base flex items-center gap-2">
+                            <i class="fa-solid fa-clock text-amber-600 text-xs"></i>
+                            ${item.day}
+                        </span>
+                        <span class="text-sm font-bold ${item.active ? 'text-amber-900 bg-amber-50' : 'text-gray-400 bg-gray-100'} px-3 py-1 rounded-xl border border-amber-200/50">
+                            ${item.active ? `${formatTime(item.open)} - ${formatTime(item.close)}` : 'Cerrado'}
+                        </span>
+                    </div>
+                `;
+            }
+        }).join('');
+    }
+
+    function updateScheduleItem(index, field, value) {
+        scheduleData[index][field] = value;
+    }
+
+    function saveSchedule() {
+        localStorage.setItem('mariell_bakery_schedule', JSON.stringify(scheduleData));
+        showToast("¡Horarios guardados correctamente!", "fa-floppy-disk");
+        updateOpenStatus();
+        if (isAdminMode) {
+            toggleAdminMode();
+        } else {
+            renderSchedule();
+        }
+    }
+
+    function resetSchedule() {
+        scheduleData = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+        localStorage.removeItem('mariell_bakery_schedule');
+        showToast("Horarios restablecidos", "fa-rotate-left");
+        renderSchedule();
+        updateOpenStatus();
+    }
+
+    function formatTime(timeStr) {
+        if (!timeStr) return '';
+        const [h, m] = timeStr.split(':');
+        let hour = parseInt(h, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12 || 12;
+        return `${hour}:${m} ${ampm}`;
+    }
+
+    function updateOpenStatus() {
+        const badge = document.getElementById('status-badge');
+        const badgeText = document.getElementById('status-badge-text');
+        if (!badge || !badgeText) return;
+
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+        let dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; 
+        const todaySchedule = scheduleData[dayIndex];
+
+        if (todaySchedule && todaySchedule.active && currentTimeStr >= todaySchedule.open && currentTimeStr <= todaySchedule.close) {
+            badge.className = "inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold shadow-sm bg-emerald-100 text-emerald-800 border border-emerald-300";
+            badgeText.textContent = `Abierto Ahora (Cierra a las ${formatTime(todaySchedule.close)})`;
+        } else {
+            badge.className = "inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold shadow-sm bg-rose-100 text-rose-800 border border-rose-300";
+            badgeText.textContent = "Cerrado en este momento";
+        }
+    }
+
+    function copyAddress() {
+        const address = "Cra. 59 #130a-13, Ciudad Jardín Norte, Bogotá, Colombia";
+        
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(address).then(() => {
+                notifyAddressCopied();
+            }).catch(() => {
+                fallbackCopy(address);
+            });
+        } else {
+            fallbackCopy(address);
+        }
+    }
+
+    function fallbackCopy(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            notifyAddressCopied();
+        } catch (err) {
+            showToast("Ubicación: Cra. 59 #130a-13, Ciudad Jardín Norte, Bogotá", "fa-location-dot");
+        }
+        document.body.removeChild(textArea);
+    }
+
+    function notifyAddressCopied() {
+        const btnText = document.getElementById('copy-btn-text');
+        if (btnText) {
+            btnText.textContent = "¡Copiado!";
+            setTimeout(() => { btnText.textContent = "Copiar Dirección"; }, 2500);
+        }
+        showToast("Dirección copiada: Cra. 59 #130a-13, Ciudad Jardín Norte, Bogotá", "fa-check");
+    }
+
+    function setWhatsAppPreset(message) {
+        const encoded = encodeURIComponent(message);
+        const url = `https://wa.me/573182158697?text=${encoded}`;
+        window.open(url, '_blank');
+    }
+
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const message = [
+            "¡Hola Panadería Mariell! Quiero hacer una consulta.",
+            `Nombre: ${formData.get('name')}`,
+            `Teléfono: ${formData.get('phone')}`,
+            `Correo: ${formData.get('email') || 'No indicado'}`,
+            `Asunto: ${formData.get('subject')}`,
+            `Mensaje: ${formData.get('message')}`
+        ].join('\n');
+
+        window.open(`https://wa.me/573182158697?text=${encodeURIComponent(message)}`, '_blank');
+        showToast("Abrimos WhatsApp para enviar tu mensaje", "fa-brands fa-whatsapp");
+    }
+
+    function showToast(message, iconClass = "fa-circle-check") {
+        const toast = document.getElementById('toast');
+        const msgEl = document.getElementById('toast-msg');
+        const iconEl = document.getElementById('toast-icon');
+
+        if (!toast || !msgEl) return;
+
+        msgEl.textContent = message;
+        if (iconEl) {
+            iconEl.className = `fa-solid ${iconClass} text-amber-400 text-lg`;
+        }
+
+        toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+        toast.classList.add('translate-y-0', 'opacity-100');
+
+        setTimeout(() => {
+            toast.classList.remove('translate-y-0', 'opacity-100');
+            toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+        }, 3500);
+    }
+</script>
